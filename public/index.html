@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pedidos - Esencias y Artículos</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    .qty-input { width: 60px; }
+    .tab-active { border-bottom: 2px solid #4f46e5; color: #4f46e5; }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+  <div class="max-w-4xl mx-auto p-4">
+    <header class="bg-indigo-600 text-white p-4 rounded-lg mb-6 flex justify-between items-center">
+      <h1 class="text-2xl font-bold">Sistema de Pedidos</h1>
+      <div>
+        <a href="/admin.html" class="text-sm bg-white text-indigo-600 px-3 py-1 rounded hover:bg-gray-100">Admin</a>
+      </div>
+    </header>
+    <div class="flex border-b mb-6">
+      <button id="tab-pedido" class="px-4 py-2 font-medium tab-active" onclick="showTab('pedido')">Hacer Pedido</button>
+      <button id="tab-datos" class="px-4 py-2 font-medium text-gray-500" onclick="showTab('datos')">Mis Datos</button>
+      <button id="tab-historial" class="px-4 py-2 font-medium text-gray-500" onclick="showTab('historial')">Historial</button>
+    </div>
+    <div id="content-pedido" class="tab-content">
+      <div id="articles-container" class="space-y-6 mb-8"></div>
+      <div class="bg-white p-4 rounded-lg shadow mb-6">
+        <h2 class="text-xl font-semibold mb-4">Tu Pedido</h2>
+        <div id="order-detailed" class="mb-4 text-sm"></div>
+        <h3 class="font-medium mb-2">Resumen por Artículo</h3>
+        <div id="order-summary" class="text-sm font-medium"></div>
+      </div>
+      <button onclick="generateAndSend()" class="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 disabled:opacity-50" id="btn-send" disabled>
+        Generar PDF y Enviar por WhatsApp
+      </button>
+    </div>
+    <div id="content-datos" class="tab-content hidden">
+      <form id="client-form" class="bg-white p-6 rounded-lg shadow space-y-4">
+        <div>
+          <label class="block text-sm font-medium">Razón Social</label>
+          <input type="text" id="razonSocial" class="mt-1 block w-full border rounded-md p-2" required>
+        </div>
+        <div>
+          <label class="block text-sm font-medium">Dirección</label>
+          <input type="text" id="direccion" class="mt-1 block w-full border rounded-md p-2" required>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium">Localidad</label>
+            <input type="text" id="localidad" class="mt-1 block w-full border rounded-md p-2" required>
+          </div>
+          <div>
+            <label class="block text-sm font-medium">Provincia</label>
+            <input type="text" id="provincia" class="mt-1 block w-full border rounded-md p-2" required>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium">Código Postal</label>
+            <input type="text" id="codigoPostal" class="mt-1 block w-full border rounded-md p-2" required>
+          </div>
+          <div>
+            <label class="block text-sm font-medium">CUIT</label>
+            <input type="text" id="cuit" class="mt-1 block w-full border rounded-md p-2" required>
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium">Condición IVA</label>
+          <select id="iva" class="mt-1 block w-full border rounded-md p-2" required>
+            <option value="">Seleccionar</option>
+            <option value="Monotributo">Monotributo</option>
+            <option value="Responsable Inscripto">Responsable Inscripto</option>
+            <option value="Exento">Exento</option>
+            <option value="Consumidor Final">Consumidor Final</option>
+            <option value="No Responsable">No Responsable</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium">Transporte</label>
+          <input type="text" id="transporte" class="mt-1 block w-full border rounded-md p-2">
+        </div>
+        <button type="submit" class="bg-indigo-600 text-white px-6 py-2 rounded hover:bg-indigo-700">Guardar Datos</button>
+      </form>
+    </div>
+    <div id="content-historial" class="tab-content hidden">
+      <div id="orders-history" class="space-y-4"></div>
+    </div>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

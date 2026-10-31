@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin - Pedidos</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+  <div class="max-w-5xl mx-auto p-4">
+    <div id="login-section" class="max-w-md mx-auto mt-20 bg-white p-8 rounded-lg shadow">
+      <h1 class="text-2xl font-bold mb-6 text-center">Acceso Administrador</h1>
+      <input type="password" id="admin-password" placeholder="Contraseña" class="w-full border p-3 rounded mb-4">
+      <button onclick="login()" class="w-full bg-indigo-600 text-white py-3 rounded font-semibold">Ingresar</button>
+      <p id="login-error" class="text-red-500 text-sm mt-2 hidden">Contraseña incorrecta</p>
+    </div>
+    <div id="admin-panel" class="hidden">
+      <header class="bg-indigo-700 text-white p-4 rounded-lg mb-6 flex justify-between">
+        <h1 class="text-2xl font-bold">Panel de Administración</h1>
+        <a href="/" class="text-sm bg-white text-indigo-700 px-3 py-1 rounded">Volver a Clientes</a>
+      </header>
+      <div class="bg-white p-4 rounded-lg shadow mb-6">
+        <h2 class="text-lg font-semibold mb-3">Configuración</h2>
+        <div class="flex gap-4 items-end">
+          <div class="flex-1">
+            <label class="block text-sm">Número de WhatsApp (con código de país, sin +)</label>
+            <input type="text" id="whatsapp-number" class="border p-2 rounded w-full" placeholder="54911...">
+          </div>
+          <div>
+            <label class="block text-sm">Cambiar Contraseña</label>
+            <input type="password" id="new-password" class="border p-2 rounded" placeholder="Nueva clave">
+          </div>
+          <button onclick="saveSettings()" class="bg-green-600 text-white px-4 py-2 rounded">Guardar</button>
+        </div>
+      </div>
+      <div class="bg-white p-4 rounded-lg shadow mb-6">
+        <h2 class="text-lg font-semibold mb-4">Artículos y Aromas</h2>
+        <button onclick="showAddArticle()" class="bg-indigo-600 text-white px-4 py-2 rounded mb-4">+ Nuevo Artículo</button>
+        <div id="articles-list" class="space-y-4"></div>
+      </div>
+      <div class="bg-white p-4 rounded-lg shadow">
+        <h2 class="text-lg font-semibold mb-4">Pedidos Recibidos</h2>
+        <div id="admin-orders" class="space-y-3 max-h-96 overflow-y-auto"></div>
+      </div>
+    </div>
+  </div>
+  <div id="article-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white p-6 rounded-lg w-full max-w-lg max-h-[80vh] overflow-y-auto">
+      <h3 id="modal-title" class="text-xl font-bold mb-4">Artículo</h3>
+      <input type="hidden" id="edit-article-id">
+      <div class="mb-4">
+        <label>Nombre del Artículo</label>
+        <input type="text" id="article-name" class="w-full border p-2 rounded">
+      </div>
+      <div class="mb-4">
+        <label>Aromas / Subartículos</label>
+        <div id="subarticles-list" class="space-y-2 mb-2"></div>
+        <div class="flex gap-2">
+          <input type="text" id="new-sub-name" placeholder="Nuevo aroma" class="flex-1 border p-2 rounded">
+          <button onclick="addSubarticleTemp()" class="bg-gray-200 px-3 rounded">+</button>
+        </div>
+      </div>
+      <div class="flex gap-2 justify-end">
+        <button onclick="closeModal()" class="px-4 py-2 border rounded">Cancelar</button>
+        <button onclick="saveArticle()" class="bg-indigo-600 text-white px-4 py-2 rounded">Guardar</button>
+      </div>
+    </div>
+  </div>
+  <script src="admin.js"></script>
+</body>
+</html>
