@@ -1,25 +1,18 @@
-# Sistema de Pedidos - Versión Estática (JSON)
+# Sistema de Pedidos - Versión Estática (arreglado)
 
-App completa que funciona abriendo el archivo o con GitHub Pages.
+App que funciona abriendo el archivo o con GitHub Pages.
 
-## Cómo usar
+## Cómo habilitar el link
+1. Settings → Pages → Deploy from a branch → main / root.
+2. Link: https://makialertas.github.io/pedidos-esencias/
 
-1. Habilitá GitHub Pages (Settings → Pages → main / root).
-2. El link será: https://makialertas.github.io/pedidos-esencias/
+## Modo Admin
+- Botón **"Modo Admin"** arriba a la derecha.
+- Contraseña: **admin123**
+- Una vez adentro podés cargar artículos, aromas y exportar el JSON.
 
-### Para clientes
-- Solapa **Importar Artículos**: subí el JSON que te mande el administrador.
-- Después hacé tu pedido normalmente.
+## Para clientes
+- Solapa **Importar Artículos** para cargar el JSON del administrador.
+- Después hacé el pedido normalmente.
 
-### Para administrador
-- Hacé clic en **Modo Admin** (clave inicial: admin123).
-- Cargá artículos y aromas.
-- Usá **Exportar Artículos (JSON)** y mandá el archivo a tus clientes.
-
-## Solapas
-- Hacer Pedido
-- Mis Datos
-- Historial
-- **Importar Artículos** (nueva)
-
-Las solapas ahora funcionan correctamente.
+Las solapas y el acceso a admin están corregidos.
