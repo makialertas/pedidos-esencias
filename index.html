@@ -1,1 +1,217 @@
-PLACEHOLDER
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema de Pedidos - Esencias</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    .qty-input { width: 70px; }
+    .tab-active { border-bottom: 2px solid #4f46e5; color: #4f46e5; font-weight: 600; }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+  <div class="max-w-5xl mx-auto p-4">
+    <header class="bg-indigo-600 text-white p-4 rounded-lg mb-6 flex justify-between items-center shadow">
+      <h1 class="text-2xl font-bold">Sistema de Pedidos</h1>
+      <button onclick="toggleAdmin()" id="admin-btn" class="text-sm bg-white text-indigo-600 px-4 py-2 rounded hover:bg-gray-100 font-medium">Modo Admin</button>
+    </header>
+    <div id="client-view">
+      <div class="flex border-b mb-6 overflow-x-auto">
+        <button id="tab-pedido" class="px-6 py-3 tab-active whitespace-nowrap" onclick="showTab('pedido')">Hacer Pedido</button>
+        <button id="tab-datos" class="px-6 py-3 text-gray-500 whitespace-nowrap" onclick="showTab('datos')">Mis Datos</button>
+        <button id="tab-historial" class="px-6 py-3 text-gray-500 whitespace-nowrap" onclick="showTab('historial')">Historial</button>
+        <button id="tab-importar" class="px-6 py-3 text-gray-500 whitespace-nowrap" onclick="showTab('importar')">Importar Artículos</button>
+      </div>
+      <div id="content-pedido" class="tab-content">
+        <div id="articles-container" class="space-y-6 mb-8"></div>
+        <div class="bg-white p-6 rounded-lg shadow mb-6">
+          <h2 class="text-xl font-semibold mb-4">Tu Pedido</h2>
+          <div id="order-detailed" class="mb-6 text-sm space-y-1"></div>
+          <h3 class="font-medium mb-2 text-indigo-700">Resumen por Artículo</h3>
+          <div id="order-summary" class="text-sm font-medium space-y-1"></div>
+        </div>
+        <button onclick="generateAndSend()" class="w-full bg-green-600 text-white py-4 rounded-lg font-semibold text-lg hover:bg-green-700 disabled:opacity-50 shadow" id="btn-send" disabled>
+          Generar PDF y Enviar por WhatsApp
+        </button>
+      </div>
+      <div id="content-datos" class="tab-content hidden">
+        <form id="client-form" class="bg-white p-6 rounded-lg shadow space-y-4">
+          <h2 class="text-xl font-semibold">Datos del Cliente (se guardan una sola vez)</h2>
+          <div><label class="block text-sm font-medium">Razón Social *</label><input type="text" id="razonSocial" class="mt-1 block w-full border rounded-md p-3" required></div>
+          <div><label class="block text-sm font-medium">Dirección *</label><input type="text" id="direccion" class="mt-1 block w-full border rounded-md p-3" required></div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div><label class="block text-sm font-medium">Localidad *</label><input type="text" id="localidad" class="mt-1 block w-full border rounded-md p-3" required></div>
+            <div><label class="block text-sm font-medium">Provincia *</label><input type="text" id="provincia" class="mt-1 block w-full border rounded-md p-3" required></div>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div><label class="block text-sm font-medium">Código Postal *</label><input type="text" id="codigoPostal" class="mt-1 block w-full border rounded-md p-3" required></div>
+            <div><label class="block text-sm font-medium">CUIT *</label><input type="text" id="cuit" class="mt-1 block w-full border rounded-md p-3" required></div>
+          </div>
+          <div><label class="block text-sm font-medium">Condición IVA *</label>
+            <select id="iva" class="mt-1 block w-full border rounded-md p-3" required>
+              <option value="">Seleccionar</option>
+              <option value="Monotributo">Monotributo</option>
+              <option value="Responsable Inscripto">Responsable Inscripto</option>
+              <option value="Exento">Exento</option>
+              <option value="Consumidor Final">Consumidor Final</option>
+              <option value="No Responsable">No Responsable</option>
+            </select>
+          </div>
+          <div><label class="block text-sm font-medium">Transporte</label><input type="text" id="transporte" class="mt-1 block w-full border rounded-md p-3" placeholder="Opcional"></div>
+          <button type="submit" class="bg-indigo-600 text-white px-8 py-3 rounded-lg hover:bg-indigo-700 font-medium">Guardar Datos</button>
+        </form>
+      </div>
+      <div id="content-historial" class="tab-content hidden"><div id="orders-history" class="space-y-4"></div></div>
+      <div id="content-importar" class="tab-content hidden">
+        <div class="bg-white p-6 rounded-lg shadow">
+          <h2 class="text-xl font-semibold mb-4">Importar Artículos</h2>
+          <p class="mb-4 text-gray-700">Si el administrador te envió un archivo JSON con los artículos y aromas actualizados, seguí estos pasos:</p>
+          <ol class="list-decimal list-inside space-y-2 mb-6 text-gray-700">
+            <li>Hacé clic en el botón de abajo y seleccioná el archivo <strong>.json</strong> que te enviaron.</li>
+            <li>Esperá el mensaje de confirmación.</li>
+            <li>Volvé a la solapa <strong>Hacer Pedido</strong> para ver los artículos actualizados.</li>
+          </ol>
+          <label class="inline-block bg-indigo-600 text-white px-6 py-3 rounded-lg cursor-pointer hover:bg-indigo-700 font-medium">
+            Seleccionar archivo JSON
+            <input type="file" accept=".json" onchange="importData(event)" class="hidden">
+          </label>
+          <p class="text-sm text-gray-500 mt-4">Los datos personales y el historial de pedidos no se borran al importar.</p>
+        </div>
+      </div>
+    </div>
+    <div id="admin-view" class="hidden">
+      <div id="admin-login" class="max-w-md mx-auto mt-10 bg-white p-8 rounded-lg shadow">
+        <h2 class="text-2xl font-bold mb-6 text-center">Acceso Administrador</h2>
+        <input type="password" id="admin-password" placeholder="Contraseña" class="w-full border p-3 rounded mb-4 text-center">
+        <button onclick="adminLogin()" class="w-full bg-indigo-600 text-white py-3 rounded font-semibold">Ingresar</button>
+        <p id="login-error" class="text-red-500 text-sm mt-2 text-center hidden">Contraseña incorrecta</p>
+        <p class="text-xs text-gray-500 mt-4 text-center">Contraseña inicial: admin123</p>
+      </div>
+      <div id="admin-panel" class="hidden">
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-2xl font-bold">Panel de Administración</h2>
+          <button onclick="toggleAdmin()" class="text-sm bg-gray-200 px-4 py-2 rounded">Salir de Admin</button>
+        </div>
+        <div class="bg-white p-6 rounded-lg shadow mb-6">
+          <h3 class="text-lg font-semibold mb-4">Configuración</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div><label class="block text-sm font-medium">Número de WhatsApp (con código de país, sin +)</label><input type="text" id="whatsapp-number" class="border p-3 rounded w-full mt-1" placeholder="54911XXXXXXXX"></div>
+            <div><label class="block text-sm font-medium">Cambiar Contraseña</label><input type="password" id="new-password" class="border p-3 rounded w-full mt-1" placeholder="Nueva clave"></div>
+          </div>
+          <button onclick="saveSettings()" class="mt-4 bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700">Guardar Configuración</button>
+        </div>
+        <div class="bg-white p-6 rounded-lg shadow mb-6">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-semibold">Artículos y Aromas</h3>
+            <button onclick="showAddArticle()" class="bg-indigo-600 text-white px-4 py-2 rounded">+ Nuevo Artículo</button>
+          </div>
+          <div id="articles-list" class="space-y-4"></div>
+        </div>
+        <div class="bg-white p-6 rounded-lg shadow">
+          <h3 class="text-lg font-semibold mb-4">Backup / Compartir Artículos</h3>
+          <div class="flex flex-wrap gap-4">
+            <button onclick="exportData()" class="bg-blue-600 text-white px-4 py-2 rounded">Exportar Artículos (JSON)</button>
+            <label class="bg-gray-600 text-white px-4 py-2 rounded cursor-pointer">Importar Artículos<input type="file" accept=".json" onchange="importData(event)" class="hidden"></label>
+          </div>
+          <p class="text-xs text-gray-500 mt-2">Exportá el JSON y mandáselo a tus clientes para que lo importen desde la solapa “Importar Artículos”.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="article-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
+    <div class="bg-white p-6 rounded-lg w-full max-w-lg max-h-[90vh] overflow-y-auto">
+      <h3 id="modal-title" class="text-xl font-bold mb-4">Artículo</h3>
+      <div class="mb-4"><label class="block font-medium">Nombre del Artículo</label><input type="text" id="article-name" class="w-full border p-3 rounded mt-1"></div>
+      <div class="mb-4">
+        <label class="block font-medium mb-2">Aromas / Subartículos</label>
+        <div id="subarticles-list" class="space-y-2 mb-3"></div>
+        <div class="flex gap-2"><input type="text" id="new-sub-name" placeholder="Nuevo aroma (ej: Sándalo)" class="flex-1 border p-3 rounded"><button onclick="addSubarticleTemp()" class="bg-indigo-100 px-4 rounded font-bold">+</button></div>
+      </div>
+      <div class="flex gap-2 justify-end"><button onclick="closeModal()" class="px-6 py-2 border rounded">Cancelar</button><button onclick="saveArticle()" class="bg-indigo-600 text-white px-6 py-2 rounded">Guardar</button></div>
+    </div>
+  </div>
+  <script>
+    let articles = JSON.parse(localStorage.getItem('articles') || '[]');
+    let settings = JSON.parse(localStorage.getItem('settings') || '{}');
+    if (!settings.adminPassword) settings.adminPassword = 'admin123';
+    if (!settings.whatsappNumber) settings.whatsappNumber = '';
+    localStorage.setItem('settings', JSON.stringify(settings));
+    let currentOrder = {};
+    let clientData = JSON.parse(localStorage.getItem('clientData') || '{}');
+    let orderHistory = JSON.parse(localStorage.getItem('orderHistory') || '[]');
+    let tempSubarticles = [];
+    let editingId = null;
+    let isAdmin = false;
+    if (articles.length === 0) {
+      articles = [{id: 1, name: "Esencia x 10 ml Salem", subarticles: [{id:1,name:"Alcanfor"},{id:2,name:"Frutilla"},{id:3,name:"Sándalo"},{id:4,name:"Violeta"},{id:5,name:"Lavanda"}]}];
+      saveArticles();
+    }
+    function saveArticles() { localStorage.setItem('articles', JSON.stringify(articles)); }
+    function saveSettings() { localStorage.setItem('settings', JSON.stringify(settings)); }
+    function saveClient() { localStorage.setItem('clientData', JSON.stringify(clientData)); }
+    function saveHistory() { localStorage.setItem('orderHistory', JSON.stringify(orderHistory)); }
+    function showTab(tab) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('[id^="tab-"]').forEach(el => { el.classList.remove('tab-active'); el.classList.add('text-gray-500'); });
+      const content = document.getElementById(`content-${tab}`);
+      const tabBtn = document.getElementById(`tab-${tab}`);
+      if (content) content.classList.remove('hidden');
+      if (tabBtn) { tabBtn.classList.add('tab-active'); tabBtn.classList.remove('text-gray-500'); }
+      if (tab === 'datos') loadClientForm();
+      if (tab === 'historial') renderHistory();
+    }
+    function renderArticles() {
+      const container = document.getElementById('articles-container');
+      if (!container) return;
+      if (articles.length === 0) { container.innerHTML = '<p class="text-gray-500 text-center py-8">No hay artículos cargados. Importá el archivo JSON del administrador.</p>'; return; }
+      container.innerHTML = '';
+      articles.forEach(art => {
+        const div = document.createElement('div');
+        div.className = 'bg-white p-5 rounded-lg shadow';
+        div.innerHTML = `<h3 class="font-bold text-lg mb-4 text-indigo-800">${art.name}</h3><div class="space-y-3">${art.subarticles.map(sub => `<div class="flex items-center justify-between bg-gray-50 p-3 rounded"><span class="font-medium">${sub.name}</span><div class="flex items-center gap-2"><button type="button" onclick="changeQty(${art.id}, ${sub.id}, -1)" class="w-10 h-10 bg-gray-200 rounded-full font-bold text-lg">-</button><input type="number" min="0" value="${currentOrder[art.id]?.[sub.id] || 0}" id="qty-${art.id}-${sub.id}" onchange="setQty(${art.id}, ${sub.id}, this.value)" class="qty-input border text-center p-2 rounded font-medium"><button type="button" onclick="changeQty(${art.id}, ${sub.id}, 1)" class="w-10 h-10 bg-gray-200 rounded-full font-bold text-lg">+</button></div></div>`).join('')}</div>`;
+        container.appendChild(div);
+      });
+      updateOrderView();
+    }
+    function changeQty(artId, subId, delta) { const input = document.getElementById(`qty-${artId}-${subId}`); if (!input) return; let val = parseInt(input.value) || 0; val = Math.max(0, val + delta); input.value = val; setQty(artId, subId, val); }
+    function setQty(artId, subId, value) { const qty = Math.max(0, parseInt(value) || 0); if (!currentOrder[artId]) currentOrder[artId] = {}; if (qty === 0) { delete currentOrder[artId][subId]; if (Object.keys(currentOrder[artId]).length === 0) delete currentOrder[artId]; } else { currentOrder[artId][subId] = qty; } updateOrderView(); }
+    function updateOrderView() {
+      const detailedDiv = document.getElementById('order-detailed');
+      const summaryDiv = document.getElementById('order-summary');
+      const btn = document.getElementById('btn-send');
+      if (!detailedDiv || !summaryDiv || !btn) return;
+      let detailedHtml = ''; let summary = {}; let hasItems = false;
+      articles.forEach(art => { if (currentOrder[art.id]) { let artTotal = 0; Object.entries(currentOrder[art.id]).forEach(([subId, qty]) => { const sub = art.subarticles.find(s => s.id == subId); if (sub && qty > 0) { detailedHtml += `<div class="py-1 border-b flex justify-between"><span>${art.name} - ${sub.name}</span><strong>${qty}</strong></div>`; artTotal += parseInt(qty); hasItems = true; } }); if (artTotal > 0) summary[art.name] = artTotal; } });
+      detailedDiv.innerHTML = detailedHtml || '<p class="text-gray-400 italic">No hay items en el pedido todavía</p>';
+      summaryDiv.innerHTML = Object.entries(summary).map(([name, total]) => `<div class="py-1 flex justify-between bg-indigo-50 px-3 rounded"><span>${name}</span><strong>${total}</strong></div>`).join('') || '<p class="text-gray-400 italic">Sin resumen</p>';
+      btn.disabled = !hasItems || !isClientDataComplete();
+    }
+    function isClientDataComplete() { return clientData.razonSocial && clientData.direccion && clientData.localidad && clientData.provincia && clientData.codigoPostal && clientData.cuit && clientData.iva; }
+    function loadClientForm() { document.getElementById('razonSocial').value = clientData.razonSocial || ''; document.getElementById('direccion').value = clientData.direccion || ''; document.getElementById('localidad').value = clientData.localidad || ''; document.getElementById('provincia').value = clientData.provincia || ''; document.getElementById('codigoPostal').value = clientData.codigoPostal || ''; document.getElementById('cuit').value = clientData.cuit || ''; document.getElementById('iva').value = clientData.iva || ''; document.getElementById('transporte').value = clientData.transporte || ''; }
+    document.getElementById('client-form').addEventListener('submit', (e) => { e.preventDefault(); clientData = { razonSocial: document.getElementById('razonSocial').value.trim(), direccion: document.getElementById('direccion').value.trim(), localidad: document.getElementById('localidad').value.trim(), provincia: document.getElementById('provincia').value.trim(), codigoPostal: document.getElementById('codigoPostal').value.trim(), cuit: document.getElementById('cuit').value.trim(), iva: document.getElementById('iva').value, transporte: document.getElementById('transporte').value.trim() }; saveClient(); alert('Datos guardados correctamente'); updateOrderView(); showTab('pedido'); });
+    function renderHistory() { const container = document.getElementById('orders-history'); if (!container) return; if (orderHistory.length === 0) { container.innerHTML = '<p class="text-gray-500 text-center py-8">No hay pedidos anteriores</p>'; return; } container.innerHTML = orderHistory.slice().reverse().map(order => `<div class="bg-white p-5 rounded-lg shadow"><div class="flex justify-between items-center"><span class="font-medium">${new Date(order.date).toLocaleString('es-AR')}</span><button onclick="downloadHistoryPDF(${order.id})" class="text-indigo-600 text-sm font-medium hover:underline">Descargar PDF</button></div><div class="text-sm mt-2 text-gray-600">${order.summaryText}</div></div>`).join(''); }
+    async function generateAndSend() { if (!isClientDataComplete()) { alert('Por favor completá tus datos personales primero'); showTab('datos'); return; } let detailed = []; let summary = {}; articles.forEach(art => { if (currentOrder[art.id]) { let total = 0; Object.entries(currentOrder[art.id]).forEach(([subId, qty]) => { const sub = art.subarticles.find(s => s.id == subId); if (sub && qty > 0) { detailed.push({ article: art.name, sub: sub.name, qty: parseInt(qty) }); total += parseInt(qty); } }); if (total > 0) summary[art.name] = total; } }); const orderData = { clientData, detailed, summary }; const pdf = await generatePDF(orderData); const filename = `Pedido_${clientData.razonSocial.replace(/[^a-z0-9]/gi, '_')}_${new Date().toISOString().slice(0,10)}.pdf`; pdf.save(filename); const historyItem = { id: Date.now(), date: new Date().toISOString(), orderData, summaryText: Object.entries(summary).map(([k,v]) => `${k}: ${v}`).join(' | ') }; orderHistory.push(historyItem); saveHistory(); let message = `*NUEVO PEDIDO*\n\n*Cliente:* ${clientData.razonSocial}\n*CUIT:* ${clientData.cuit}\n*IVA:* ${clientData.iva}\n`; if (clientData.transporte) message += `*Transporte:* ${clientData.transporte}\n`; message += `\n*DETALLE:*\n`; detailed.forEach(item => { message += `- ${item.article} - ${item.sub}: ${item.qty}\n`; }); message += `\n*RESUMEN:*\n`; Object.entries(summary).forEach(([name, total]) => { message += `- ${name}: ${total}\n`; }); message += `\n(Adjuntar el PDF descargado)`; const waNumber = settings.whatsappNumber || ''; if (waNumber) { const waUrl = `https://wa.me/${waNumber}?text=${encodeURIComponent(message)}`; window.open(waUrl, '_blank'); } else { alert('PDF descargado. Configurá el número de WhatsApp en el panel de Admin para abrir el chat automáticamente.'); } currentOrder = {}; renderArticles(); alert('PDF descargado correctamente. Si se abrió WhatsApp, adjuntá el archivo PDF al mensaje.'); }
+    async function generatePDF(orderData) { const { jsPDF } = window.jspdf; const doc = new jsPDF(); let y = 20; doc.setFontSize(18); doc.setFont(undefined, 'bold'); doc.text('NOTA DE PEDIDO', 105, y, { align: 'center' }); y += 12; doc.setFontSize(10); doc.setFont(undefined, 'normal'); doc.text(`Fecha: ${new Date().toLocaleString('es-AR')}`, 20, y); y += 15; doc.setFontSize(12); doc.setFont(undefined, 'bold'); doc.text('DATOS DEL CLIENTE', 20, y); y += 8; doc.setFontSize(10); doc.setFont(undefined, 'normal'); const c = orderData.clientData; doc.text(`Razón Social: ${c.razonSocial}`, 20, y); y += 6; doc.text(`Dirección: ${c.direccion}`, 20, y); y += 6; doc.text(`Localidad: ${c.localidad} - ${c.provincia} (CP: ${c.codigoPostal})`, 20, y); y += 6; doc.text(`CUIT: ${c.cuit}`, 20, y); y += 6; doc.text(`Condición IVA: ${c.iva}`, 20, y); y += 6; if (c.transporte) { doc.text(`Transporte: ${c.transporte}`, 20, y); y += 6; } y += 12; doc.setFontSize(12); doc.setFont(undefined, 'bold'); doc.text('DETALLE DEL PEDIDO', 20, y); y += 8; doc.setFontSize(10); doc.setFont(undefined, 'normal'); orderData.detailed.forEach(item => { if (y > 270) { doc.addPage(); y = 20; } doc.text(`• ${item.article} - ${item.sub}: ${item.qty}`, 25, y); y += 7; }); y += 10; doc.setFontSize(12); doc.setFont(undefined, 'bold'); doc.text('RESUMEN POR ARTÍCULO', 20, y); y += 8; doc.setFontSize(10); doc.setFont(undefined, 'normal'); Object.entries(orderData.summary).forEach(([name, total]) => { if (y > 270) { doc.addPage(); y = 20; } doc.text(`• ${name}: ${total}`, 25, y); y += 7; }); return doc; }
+    function downloadHistoryPDF(id) { const order = orderHistory.find(o => o.id === id); if (order) { generatePDF(order.orderData).then(doc => { doc.save(`Pedido_${id}.pdf`); }); } }
+    function toggleAdmin() { isAdmin = !isAdmin; const clientView = document.getElementById('client-view'); const adminView = document.getElementById('admin-view'); const adminBtn = document.getElementById('admin-btn'); if (isAdmin) { clientView.classList.add('hidden'); adminView.classList.remove('hidden'); adminBtn.textContent = 'Ver como Cliente'; document.getElementById('admin-login').classList.remove('hidden'); document.getElementById('admin-panel').classList.add('hidden'); document.getElementById('admin-password').value = ''; document.getElementById('login-error').classList.add('hidden'); } else { clientView.classList.remove('hidden'); adminView.classList.add('hidden'); adminBtn.textContent = 'Modo Admin'; } }
+    function adminLogin() { const pass = (document.getElementById('admin-password').value || '').trim(); const correct = (settings.adminPassword || 'admin123').trim(); if (pass === correct) { document.getElementById('admin-login').classList.add('hidden'); document.getElementById('admin-panel').classList.remove('hidden'); document.getElementById('login-error').classList.add('hidden'); loadAdmin(); } else { document.getElementById('login-error').classList.remove('hidden'); document.getElementById('admin-password').value = ''; } }
+    function loadAdmin() { document.getElementById('whatsapp-number').value = settings.whatsappNumber || ''; renderArticlesList(); }
+    function renderArticlesList() { const container = document.getElementById('articles-list'); if (!container) return; if (articles.length === 0) { container.innerHTML = '<p class="text-gray-500">No hay artículos. Agregá el primero.</p>'; return; } container.innerHTML = articles.map(art => `<div class="border p-4 rounded-lg"><div class="flex justify-between items-start"><div><strong class="text-lg">${art.name}</strong><div class="text-sm text-gray-600 mt-1">${art.subarticles.map(s => s.name).join(', ') || 'Sin aromas'}</div></div><div class="space-x-3"><button onclick="editArticle(${art.id})" class="text-blue-600 font-medium">Editar</button><button onclick="deleteArticle(${art.id})" class="text-red-600 font-medium">Eliminar</button></div></div></div>`).join(''); }
+    function saveSettings() { settings.whatsappNumber = document.getElementById('whatsapp-number').value.trim(); const newPass = document.getElementById('new-password').value.trim(); if (newPass) settings.adminPassword = newPass; localStorage.setItem('settings', JSON.stringify(settings)); alert('Configuración guardada'); document.getElementById('new-password').value = ''; }
+    function showAddArticle() { editingId = null; tempSubarticles = []; document.getElementById('modal-title').textContent = 'Nuevo Artículo'; document.getElementById('article-name').value = ''; renderTempSubs(); document.getElementById('article-modal').classList.remove('hidden'); document.getElementById('article-modal').classList.add('flex'); }
+    function editArticle(id) { const art = articles.find(a => a.id === id); if (!art) return; editingId = id; tempSubarticles = JSON.parse(JSON.stringify(art.subarticles)); document.getElementById('modal-title').textContent = 'Editar Artículo'; document.getElementById('article-name').value = art.name; renderTempSubs(); document.getElementById('article-modal').classList.remove('hidden'); document.getElementById('article-modal').classList.add('flex'); }
+    function renderTempSubs() { const container = document.getElementById('subarticles-list'); container.innerHTML = tempSubarticles.map((sub, idx) => `<div class="flex justify-between items-center bg-gray-50 p-3 rounded"><span>${sub.name}</span><button onclick="removeTempSub(${idx})" class="text-red-500 font-bold">✕</button></div>`).join(''); }
+    function addSubarticleTemp() { const name = document.getElementById('new-sub-name').value.trim(); if (name) { tempSubarticles.push({ id: Date.now() + Math.random(), name }); document.getElementById('new-sub-name').value = ''; renderTempSubs(); } }
+    function removeTempSub(idx) { tempSubarticles.splice(idx, 1); renderTempSubs(); }
+    function saveArticle() { const name = document.getElementById('article-name').value.trim(); if (!name) { alert('El nombre del artículo es obligatorio'); return; } if (editingId) { const art = articles.find(a => a.id === editingId); art.name = name; art.subarticles = tempSubarticles; } else { articles.push({ id: Date.now(), name, subarticles: tempSubarticles }); } saveArticles(); closeModal(); renderArticlesList(); renderArticles(); }
+    function deleteArticle(id) { if (confirm('¿Eliminar este artículo y todos sus aromas?')) { articles = articles.filter(a => a.id !== id); saveArticles(); renderArticlesList(); renderArticles(); } }
+    function closeModal() { document.getElementById('article-modal').classList.add('hidden'); document.getElementById('article-modal').classList.remove('flex'); }
+    function exportData() { const data = { articles, settings: { whatsappNumber: settings.whatsappNumber, adminPassword: settings.adminPassword } }; const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'articulos_pedidos.json'; a.click(); }
+    function importData(event) { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = (e) => { try { const data = JSON.parse(e.target.result); if (data.articles) articles = data.articles; if (data.settings) settings = { ...settings, ...data.settings }; saveArticles(); localStorage.setItem('settings', JSON.stringify(settings)); alert('Artículos importados correctamente'); if (isAdmin) loadAdmin(); renderArticles(); showTab('pedido'); } catch (err) { alert('Error al importar el archivo. Verificá que sea un JSON válido.'); } }; reader.readAsText(file); event.target.value = ''; }
+    document.getElementById('admin-password').addEventListener('keypress', (e) => { if (e.key === 'Enter') adminLogin(); });
+    renderArticles();
+  </script>
+</body>
+</html>
