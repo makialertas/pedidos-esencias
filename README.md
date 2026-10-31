@@ -1,25 +1,48 @@
-# Sistema de Pedidos - Esencias
+# Sistema de Pedidos de Esencias (Versión con Servidor Compartido)
 
-App web para que tus clientes realicen pedidos de artículos con aromas, generen PDF y los envíen por WhatsApp.
-
-## Cómo usar
-
-1. Abrí el link de GitHub Pages (una vez habilitado).
-2. **Clientes**: Hacé tu pedido, cargá tus datos (se guardan en el navegador), generá el PDF y enviá por WhatsApp.
-3. **Admin**: Hacé clic en "Modo Admin" (contraseña inicial: **admin123**). Cargá artículos y aromas, configurá tu número de WhatsApp.
+App web para que tus clientes realicen pedidos de artículos con aromas. Los cambios que haga el administrador se ven **inmediatamente** para todos los clientes (sin necesidad de mandar JSON).
 
 ## Características
-- Pedido con detalle (artículo + aroma + cantidad) y resumen agrupado por artículo.
-- Datos personales guardados una sola vez.
-- Generación de PDF de la nota de pedido.
-- Envío por WhatsApp.
-- Historial de pedidos.
-- Exportar/Importar datos para compartir configuración.
+- **Admin** (protegido con clave): cargar/editar artículos y aromas, configurar WhatsApp, ver pedidos recibidos.
+- **Clientes**: hacer pedidos con cantidades por aroma, ver detalle + resumen agrupado, datos personales guardados, generar PDF y enviar por WhatsApp, historial local.
+- Datos compartidos en tiempo real vía servidor.
 
-## Habilitar GitHub Pages
-1. Andá a Settings → Pages.
-2. Source: Deploy from a branch → main / root.
-3. Guardá.
-4. El link será: https://makialertas.github.io/pedidos-esencias/
+## Contraseña inicial de Admin
+**admin123** (cambiala desde el panel)
 
-¡Listo para usar con tus clientes!
+## Desplegar gratis en Render.com (recomendado)
+
+1. Entrá a https://render.com y creá una cuenta (con GitHub).
+2. New → Web Service.
+3. Conectá este repositorio: `makialertas/pedidos-esencias`
+4. Configuración:
+   - **Name**: pedidos-esencias (o el que quieras)
+   - **Region**: el más cercano
+   - **Branch**: main
+   - **Root Directory**: (dejar vacío o `/`)
+   - **Runtime**: Node
+   - **Build Command**: `npm install`
+   - **Start Command**: `node server.js`
+   - **Instance Type**: Free
+5. Create Web Service.
+
+En unos minutos te da un link público tipo:  
+`https://pedidos-esencias.onrender.com`
+
+Ese link se lo mandás a tus clientes.
+
+**Nota**: En el plan Free de Render el servidor se "duerme" después de un rato de inactividad y tarda ~30 segundos en despertar la primera vez. Los datos se mantienen mientras el servicio esté activo.
+
+## Correr en local
+```bash
+npm install
+npm start
+```
+Abrí http://localhost:3000
+
+## Estructura
+- `server.js` → backend
+- `public/` → frontend (clientes + admin)
+- `data/db.json` → base de datos (artículos, settings, pedidos)
+
+¡Listo para usar con todos tus clientes!

@@ -1,0 +1,20 @@
+{
+  "articles": [
+    {
+      "id": 1,
+      "name": "Esencia x 10 ml Salem",
+      "subarticles": [
+        {"id": 1, "name": "Alcanfor"},
+        {"id": 2, "name": "Frutilla"},
+        {"id": 3, "name": "Sándalo"},
+        {"id": 4, "name": "Violeta"},
+        {"id": 5, "name": "Lavanda"}
+      ]
+    }
+  ],
+  "settings": {
+    "whatsappNumber": "5491100000000",
+    "adminPassword": "admin123"
+  },
+  "orders": []
+}
